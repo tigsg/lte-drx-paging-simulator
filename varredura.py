@@ -111,24 +111,26 @@ def _grafico(pontos: list[dict], caminho: str = "grafico_varredura.png") -> None
 
     ax_lat.set_xlabel(EIXO_X_LABEL)
     ax_lat.set_ylabel("Latencia (subframes)", color="royalblue")
-    ax_cpu.set_ylabel("Consumo — % de subframes processados", color="tomato")
+    ax_cpu.set_ylabel("Consumo (% de subframes processados)", color="tomato")
     ax_lat.tick_params(axis="y", labelcolor="royalblue")
     ax_cpu.tick_params(axis="y", labelcolor="tomato")
     ax_lat.set_xticks(xs)
     ax_lat.grid(alpha=0.3)
 
-    ax_lat.legend(handles=[l_lat, l_cpu], loc="upper center")
+    # Legenda fora da area de plotagem, para nao cobrir as curvas.
+    ax_lat.legend(handles=[l_lat, l_cpu], loc="lower center",
+                  bbox_to_anchor=(0.5, 1.01), ncol=2, frameon=False)
+    # Nota informativa tambem FORA da area de plotagem, abaixo do eixo x.
     n_total = pontos[0].get("n", 0) if pontos else 0
-    linha_n = f"{n_total} amostras por ponto\n" if n_total else ""
-    ax_lat.text(0.02, 0.03,
-                f"{linha_n}Faixa azul: min-max da latencia\n"
-                "Referencia Blind Search: latencia ~1 sf | consumo 100%",
-                transform=ax_lat.transAxes, fontsize=9, va="bottom",
-                bbox=dict(facecolor="lightyellow", boxstyle="round", alpha=0.9))
+    partes = ([f"{n_total} amostras por ponto"] if n_total else [])
+    partes += ["faixa azul: min-max da latencia",
+               "referencia Blind Search: latencia ~1 sf e consumo 100%"]
+    fig.text(0.5, 0.015, "  |  ".join(partes), ha="center", va="bottom",
+             fontsize=8.5, color="#444444")
 
-    fig.suptitle("Trade-off do DRX — ciclo maior: menos consumo, mais latencia",
+    fig.suptitle("Trade-off do DRX: ciclo maior, menos consumo e mais latencia",
                  fontsize=13, fontweight="bold")
-    plt.tight_layout()
+    plt.tight_layout(rect=(0, 0.05, 1, 0.95))
     plt.savefig(caminho, dpi=150)
     plt.close()
 
