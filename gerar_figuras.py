@@ -187,7 +187,7 @@ def fig_transicao(caminho="fig3_transicao_drx.png",
 # Figura 4 — Evidencia de multiprocessing (PIDs)
 # ---------------------------------------------------------------------------
 def fig_multiprocessing(caminho="fig4_multiprocessing.png",
-                        csv_path="resultados_simulacao.csv"):
+                        csv_path="resultados_simulacao.csv", lote=8):
     pids, modos = [], []
     if os.path.exists(csv_path):
         with open(csv_path, encoding="utf-8") as f:
@@ -203,17 +203,29 @@ def fig_multiprocessing(caminho="fig4_multiprocessing.png",
         modos = [1 if i % 2 else 2 for i in range(len(pids))]
         origem = "dados ilustrativos (rode o Monte Carlo para dados reais)"
 
-    fig, ax = plt.subplots(figsize=(9, 4.2))
+    # PIDs distintos DENTRO de cada lote: e' isso que comprova a simultaneidade.
+    # Entre lotes o sistema operacional reaproveita identificadores ja liberados,
+    # entao o total de PIDs distintos e' menor que o numero de UEs.
+    lotes = [pids[i:i + lote] for i in range(0, len(pids), lote)]
+    lotes_limpos = sum(1 for L in lotes if len(set(L)) == len(L))
+
+    fig, ax = plt.subplots(figsize=(9.5, 4.4))
     xs = range(1, len(pids) + 1)
     cores = [AZUL if m == 1 else VERMELHO for m in modos]
-    ax.scatter(xs, pids, c=cores, s=42, edgecolor="black", linewidth=0.5, zorder=3)
+    ax.scatter(xs, pids, c=cores, s=26, edgecolor="black", linewidth=0.4, zorder=3)
 
-    ax.set_xlabel("UE simulado")
-    ax.set_ylabel("PID do processo no sistema operacional")
-    ax.grid(alpha=0.3)
+    # Separadores de lote (sem poluir quando ha muitos lotes)
+    if len(lotes) <= 30:
+        for k in range(lote, len(pids), lote):
+            ax.axvline(k + 0.5, color="#cccccc", linewidth=0.7, zorder=1)
+
+    ax.set_xlabel(f"UE simulado (linhas verticais separam os lotes de {lote} processos)")
+    ax.set_ylabel("PID do processo")
+    ax.grid(axis="y", alpha=0.3)
     ax.set_title(f"Figura 4 - Cada UE executou em um processo proprio\n"
-                 f"{len(pids)} UEs, {len(set(pids))} PIDs distintos "
-                 f"({origem})", fontsize=12, weight="bold", pad=10)
+                 f"{len(pids)} UEs em {len(lotes)} lotes de {lote} processos "
+                 f"simultaneos, todos com PID distinto dentro do lote "
+                 f"({lotes_limpos}/{len(lotes)})", fontsize=11.5, weight="bold", pad=10)
 
     from matplotlib.lines import Line2D
     ax.legend(handles=[
@@ -221,8 +233,12 @@ def fig_multiprocessing(caminho="fig4_multiprocessing.png",
                markeredgecolor="black", markersize=8, label="DRX"),
         Line2D([0], [0], marker="o", color="w", markerfacecolor=VERMELHO,
                markeredgecolor="black", markersize=8, label="Blind Search"),
-    ], loc="best")
-    fig.tight_layout()
+    ], loc="upper right", fontsize=9)
+    fig.text(0.5, 0.015,
+             f"{len(set(pids))} PIDs distintos no total: entre lotes o sistema "
+             f"operacional reaproveita identificadores ja liberados",
+             ha="center", fontsize=8.5, color="#444444")
+    fig.tight_layout(rect=(0, 0.045, 1, 1))
     fig.savefig(caminho, dpi=DPI, facecolor="white")
     plt.close(fig)
     return caminho

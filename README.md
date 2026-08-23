@@ -40,6 +40,7 @@ tempo. É por isso que o consumo cai de 100% para cerca de 1%.
 | Orquestrador | `monte_carlo.py` | Cria N processos de UE, dispara as paginações e coleta os resultados |
 | Estudo paramétrico | `varredura.py` | Repete campanhas variando o ciclo DRX e levanta a curva de trade-off |
 | Figuras | `gerar_figuras.py` | Gera os diagramas explicativos deste README |
+| Campanha de validação | `campanha_validacao.py` | Compara DRX e Blind Search numa mesma população |
 
 Cada UE abre o **próprio socket** na porta de *broadcast*. Isso é possível
 graças à opção de reuso de endereço, que faz todos os sockets receberem cópia da
@@ -78,6 +79,10 @@ python monte_carlo.py     # compara DRX e Blind Search
 
 ```bash
 python varredura.py       # varre os ciclos e levanta a curva de trade-off
+```
+
+```bash
+python campanha_validacao.py    # compara os dois modos com 200 UEs
 ```
 
 ```bash
@@ -154,9 +159,11 @@ Comparando os dois modos diretamente, com ciclo de 16 frames:
 
 ![Distribuição de latência](grafico_latencia_lte.png)
 
-O Blind Search recebe a paginação em cerca de 1 subframe, ao custo de processar
-100% do tempo. O DRX distribui-se uniformemente ao longo do ciclo, com média em
-torno de 80 subframes, mas processa menos de 1% dos subframes.
+Na campanha de validação com 200 UEs, o Blind Search recebe a paginação em 1
+subframe, ao custo de processar 100% do tempo. O DRX distribui-se uniformemente
+ao longo do ciclo, com média de 79,6 subframes, e processa apenas 0,76%. Em
+números redondos: o Blind Search responde cerca de 80 vezes mais rápido e
+consome 131 vezes mais rádio.
 
 ### Rigor de medição
 
